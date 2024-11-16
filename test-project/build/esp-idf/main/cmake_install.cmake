@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/LENOVO/Desktop/test-project/main
+# Install script for directory: C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

@@ -66,27 +66,6 @@ void app_main(void)
     eTaskState state = eTaskGetState(sensor_task_1_handle);
     ESP_LOGI("MAIN", "Sensor task 1 state: %d", state);
 
-    // Log the task status 
-    TaskStatus_t task_status;
-    vTaskGetInfo(sensor_task_1_handle, &task_status, pdTRUE, eInvalid);
-    ESP_LOGI("MAIN", "Sensor task 1 status: %d", task_status.eCurrentState);    
-
-    /*
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    vTaskPrioritySet(sensor_task_2_handle, 6);
-    ESP_LOGI("MAIN", "Sensor task 2 priority set to 6");
-    */
-    
-    // TODO: Print task info
-    /*
-    TaskStatus_t task_info;
-    vTaskGetInfo(NULL, &task_info, pdTRUE, eInvalid);
-    ESP_LOGI("MAIN", "Task name: %s", task_info.pcTaskName);
-    ESP_LOGI("MAIN", "Task state: %d", task_info.eCurrentState);
-    ESP_LOGI("MAIN", "Task priority: %d", task_info.uxCurrentPriority);
-    ESP_LOGI("MAIN", "Task stack: %d", task_info.usStackHighWaterMark);
-    */
-
     while (1)
     {
         /*
