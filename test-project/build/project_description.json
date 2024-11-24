@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "test-project",
-    "project_version":    "248374b-dirty",
+    "project_version":    "1.0.0",
     "project_path":       "C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project",
     "idf_path":           "C:/Users/LENOVO/esp/v5.3.1/esp-idf",
     "build_dir":          "C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/build",
