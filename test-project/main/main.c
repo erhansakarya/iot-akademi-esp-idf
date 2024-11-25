@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_flash.h"
@@ -13,6 +14,25 @@
 TaskHandle_t sensor_task_handle;
 TaskHandle_t network_task_handle;
 
+// NOTE: Create a semaphore to synchronize access to the I2C
+SemaphoreHandle_t i2c_semaphore;
+
+// NOTE: Dummy I2C read function
+void dummy_i2c_read()
+{
+    ESP_LOGI("DUMMY_I2C_READ", "Dummy I2C read function started");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    ESP_LOGI("DUMMY_I2C_READ", "Dummy I2C read function finished");
+}
+
+// NOTE: Dummy I2C write function
+void dummy_i2c_write()
+{
+    ESP_LOGI("DUMMY_I2C_WRITE", "Dummy I2C write function started");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    ESP_LOGI("DUMMY_I2C_WRITE", "Dummy I2C write function finished");
+}
+
 void sensor_task(void *pvParameters)
 {
     ESP_LOGI("SENSOR_TASK", "Sensor task executing for pin %d", *(uint8_t *)pvParameters);
@@ -21,29 +41,39 @@ void sensor_task(void *pvParameters)
 
     while (1)
     {
-        if (network_task_handle != NULL && eTaskGetState(network_task_handle) != eDeleted)
+        if (xSemaphoreTake(i2c_semaphore, portMAX_DELAY) == pdTRUE)
         {
-            ESP_LOGI("SENSOR_TASK", "Sending task notification to network task from sensor task 1");
-            
-            // NOTE: Set first bit of notification value to 1
-            xTaskNotify(network_task_handle, 0x01, eSetBits);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            ESP_LOGI("SENSOR_TASK", "I2C semaphore taken");
+            dummy_i2c_read();
+            xSemaphoreGive(i2c_semaphore);
+            ESP_LOGI("SENSOR_TASK", "I2C semaphore given");
+        }
+        else
+        {
+            ESP_LOGW("SENSOR_TASK", "Failed to take I2C semaphore");
+        }
 
-            // NOTE: Set second bit of notification value to 1
-            xTaskNotify(network_task_handle, 0x02, eSetBits);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
 
-            // Note: Send notification value 123 to network task with overwrite
-            //xTaskNotify(network_task_handle, 123, eSetValueWithOverwrite);
-            //vTaskDelay(1000 / portTICK_PERIOD_MS);
+void eeprom_task(void *pvParameters)
+{
+    // Log the task core id
+    ESP_LOGI("EEPROM_TASK", "Sensor task core id: %d", xPortGetCoreID());
 
-            /*
-            ESP_LOGI("SENSOR_TASK", "Sending task notification to network task from sensor task 1");
-            // NOTE: Send task notification to network task
-            xTaskNotifyGive(network_task_handle);
-            */
-        } else {
-            ESP_LOGW("SENSOR_TASK", "Network task is not ready!");
+    while (1)
+    {
+        if (xSemaphoreTake(i2c_semaphore, portMAX_DELAY) == pdTRUE)
+        {
+            ESP_LOGI("EEPROM_TASK", "I2C semaphore taken");
+            dummy_i2c_read();
+            xSemaphoreGive(i2c_semaphore);
+            ESP_LOGI("EEPROM_TASK", "I2C semaphore given");
+        }
+        else
+        {
+            ESP_LOGW("EEPROM_TASK", "Failed to take I2C semaphore");
         }
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -56,31 +86,10 @@ void network_task(void *pvParameters)
     // Log the task core id
     ESP_LOGI("NETWORK_TASK", "Network task core id: %d", xPortGetCoreID());
 
-    int notification_value = 0;
-
     while (1)
     {   
-        xTaskNotifyWait(0x01, 0x02, &notification_value, portMAX_DELAY);
-        
-        switch (notification_value)
-        {
-            case 0x01:
-                ESP_LOGI("NETWORK_TASK", "First bit of notification value is set");
-                break;
-            case 0x02:
-                ESP_LOGI("NETWORK_TASK", "Second bit of notification value is set");
-                break;
-            default:
-                ESP_LOGI("NETWORK_TASK", "Notification value: %d", notification_value);
-                break;
-        }
-
-        /*
-        // NOTE: Wait for task notification from sensor task
-        notification_count = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-        ESP_LOGI("NETWORK_TASK", "Notification count: %d", notification_count);
-        */
+        ESP_LOGI("NETWORK_TASK", "Network task executing");
+        vTaskDelay(1000 / portTICK_PERIOD_MS);  
     }
 }
 
@@ -94,8 +103,16 @@ void app_main(void)
     ESP_LOGI("MAIN", "Network task priority: %d", CONFIG_NETWORK_TASK_PRIORITY);
     ESP_LOGI("MAIN", "Network task stack size: %d", CONFIG_NETWORK_TASK_STACK_SIZE);    
 
-    xTaskCreatePinnedToCore(&sensor_task, "SENSOR_TASK", 2048, (void *)&pin_number_2, CONFIG_SENSOR_TASK_PRIORITY, NULL, 0);
+    // NOTE: Create a semaphore to synchronize access to the I2C
+    i2c_semaphore = xSemaphoreCreateMutex();
+    if (i2c_semaphore == NULL)
+    {
+        ESP_LOGE("MAIN", "Failed to create semaphore");
+        return;
+    }
 
+    xTaskCreatePinnedToCore(&sensor_task, "SENSOR_TASK", 2048, (void *)&pin_number_2, CONFIG_SENSOR_TASK_PRIORITY, NULL, 0);
+    xTaskCreatePinnedToCore(&eeprom_task, "EEPROM_TASK", 2048, NULL, 5, NULL, 0);
     xTaskCreatePinnedToCore(&network_task, "NETWORK_TASK", CONFIG_NETWORK_TASK_STACK_SIZE, NULL, CONFIG_NETWORK_TASK_PRIORITY, &network_task_handle, 1);
 
     while (1)
