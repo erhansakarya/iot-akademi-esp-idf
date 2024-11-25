@@ -14,23 +14,25 @@
 TaskHandle_t sensor_task_handle;
 TaskHandle_t network_task_handle;
 
-// NOTE: Create a semaphore to synchronize access to the I2C
-SemaphoreHandle_t i2c_semaphore;
+// NOTE: Create a semaphore to synchronize access to the sensor data
+SemaphoreHandle_t sensor_data_semaphore;
+// NOTE: Create a sensor data variable
+int sensor_data = 0;   
 
-// NOTE: Dummy I2C read function
-void dummy_i2c_read()
+// NOTE: Dummy read sensor function
+void dummy_read_sensor()
 {
-    ESP_LOGI("DUMMY_I2C_READ", "Dummy I2C read function started");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    ESP_LOGI("DUMMY_I2C_READ", "Dummy I2C read function finished");
+    ESP_LOGI("DUMMY_READ_SENSOR", "Dummy read sensor function started");
+    sensor_data++;
+    ESP_LOGI("DUMMY_READ_SENSOR", "Dummy read sensor function finished");
 }
 
-// NOTE: Dummy I2C write function
-void dummy_i2c_write()
+// NOTE: Dummy EEPROM write function
+void dummy_eeprom_write()
 {
-    ESP_LOGI("DUMMY_I2C_WRITE", "Dummy I2C write function started");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    ESP_LOGI("DUMMY_I2C_WRITE", "Dummy I2C write function finished");
+    ESP_LOGI("DUMMY_EEPROM_WRITE", "Dummy EEPROM write function started");
+    ESP_LOGI("DUMMY_EEPROM_WRITE", "Sensor data: %d", sensor_data);
+    ESP_LOGI("DUMMY_EEPROM_WRITE", "Dummy EEPROM write function finished");
 }
 
 void sensor_task(void *pvParameters)
@@ -41,17 +43,11 @@ void sensor_task(void *pvParameters)
 
     while (1)
     {
-        if (xSemaphoreTake(i2c_semaphore, portMAX_DELAY) == pdTRUE)
-        {
-            ESP_LOGI("SENSOR_TASK", "I2C semaphore taken");
-            dummy_i2c_read();
-            xSemaphoreGive(i2c_semaphore);
-            ESP_LOGI("SENSOR_TASK", "I2C semaphore given");
-        }
-        else
-        {
-            ESP_LOGW("SENSOR_TASK", "Failed to take I2C semaphore");
-        }
+        // NOTE: Read the sensor data
+        dummy_read_sensor();
+
+        // NOTE: Give the semaphore to the EEPROM task
+        xSemaphoreGive(sensor_data_semaphore);
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
@@ -64,19 +60,10 @@ void eeprom_task(void *pvParameters)
 
     while (1)
     {
-        if (xSemaphoreTake(i2c_semaphore, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTake(sensor_data_semaphore, portMAX_DELAY) == pdTRUE)
         {
-            ESP_LOGI("EEPROM_TASK", "I2C semaphore taken");
-            dummy_i2c_read();
-            xSemaphoreGive(i2c_semaphore);
-            ESP_LOGI("EEPROM_TASK", "I2C semaphore given");
+            dummy_eeprom_write();
         }
-        else
-        {
-            ESP_LOGW("EEPROM_TASK", "Failed to take I2C semaphore");
-        }
-
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -103,9 +90,8 @@ void app_main(void)
     ESP_LOGI("MAIN", "Network task priority: %d", CONFIG_NETWORK_TASK_PRIORITY);
     ESP_LOGI("MAIN", "Network task stack size: %d", CONFIG_NETWORK_TASK_STACK_SIZE);    
 
-    // NOTE: Create a semaphore to synchronize access to the I2C
-    i2c_semaphore = xSemaphoreCreateMutex();
-    if (i2c_semaphore == NULL)
+    sensor_data_semaphore = xSemaphoreCreateBinary();
+    if (sensor_data_semaphore == NULL)
     {
         ESP_LOGE("MAIN", "Failed to create semaphore");
         return;
