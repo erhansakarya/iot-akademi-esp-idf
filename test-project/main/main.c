@@ -24,36 +24,29 @@ void sensor_task(void *pvParameters)
         if (network_task_handle != NULL && eTaskGetState(network_task_handle) != eDeleted)
         {
             ESP_LOGI("SENSOR_TASK", "Sending task notification to network task from sensor task 1");
+            
+            // NOTE: Set first bit of notification value to 1
+            xTaskNotify(network_task_handle, 0x01, eSetBits);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+            // NOTE: Set second bit of notification value to 1
+            xTaskNotify(network_task_handle, 0x02, eSetBits);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+            // Note: Send notification value 123 to network task with overwrite
+            //xTaskNotify(network_task_handle, 123, eSetValueWithOverwrite);
+            //vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+            /*
+            ESP_LOGI("SENSOR_TASK", "Sending task notification to network task from sensor task 1");
             // NOTE: Send task notification to network task
             xTaskNotifyGive(network_task_handle);
+            */
         } else {
             ESP_LOGW("SENSOR_TASK", "Network task is not ready!");
         }
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
-
-void sensor_2_task(void *pvParameters)
-{
-    ESP_LOGI("SENSOR_2_TASK", "Sensor task executing for pin %d", *(uint8_t *)pvParameters);
-    // Log the task core id
-    ESP_LOGI("SENSOR_2_TASK", "Sensor task core id: %d", xPortGetCoreID());
-
-    while (1)
-    {
-        if (network_task_handle != NULL && eTaskGetState(network_task_handle) != eDeleted)
-        {
-            ESP_LOGI("SENSOR_2_TASK", "Sending task notification to network task from sensor task 2");
-            // NOTE: Send task notification to network task
-            xTaskNotifyGive(network_task_handle);
-            // NOTE: Send task notification to network task
-            xTaskNotifyGive(network_task_handle);
-        } else {
-            ESP_LOGW("SENSOR_TASK", "Network task is not ready!");
-        }
-
-        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
 
@@ -63,14 +56,31 @@ void network_task(void *pvParameters)
     // Log the task core id
     ESP_LOGI("NETWORK_TASK", "Network task core id: %d", xPortGetCoreID());
 
-    unsigned int notification_count = 0;
+    int notification_value = 0;
 
     while (1)
     {   
+        xTaskNotifyWait(0x01, 0x02, &notification_value, portMAX_DELAY);
+        
+        switch (notification_value)
+        {
+            case 0x01:
+                ESP_LOGI("NETWORK_TASK", "First bit of notification value is set");
+                break;
+            case 0x02:
+                ESP_LOGI("NETWORK_TASK", "Second bit of notification value is set");
+                break;
+            default:
+                ESP_LOGI("NETWORK_TASK", "Notification value: %d", notification_value);
+                break;
+        }
+
+        /*
         // NOTE: Wait for task notification from sensor task
         notification_count = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
         ESP_LOGI("NETWORK_TASK", "Notification count: %d", notification_count);
+        */
     }
 }
 
@@ -81,7 +91,6 @@ void app_main(void)
     uint8_t pin_number_2 = 13;
 
     xTaskCreatePinnedToCore(&sensor_task, "SENSOR_TASK", 2048, (void *)&pin_number_2, 5, NULL, 0);
-    xTaskCreatePinnedToCore(&sensor_2_task, "SENSOR_2_TASK", 2048, (void *)&pin_number_2, 5, NULL, 0);
 
     xTaskCreatePinnedToCore(&network_task, "NETWORK_TASK", 2048, NULL, 6, &network_task_handle, 1);
 
