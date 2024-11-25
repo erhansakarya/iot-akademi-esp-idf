@@ -2,7 +2,7 @@
 -- Building ESP-IDF components for target esp32
 -- Project sdkconfig file C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/sdkconfig
 -- Compiler supported targets: xtensa-esp-elf
--- App "test-project" version: #13-dirty
+-- App "test-project" version: 1.0.0
 -- Adding linker script C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/build/esp-idf/esp_system/ld/memory.ld
 -- Adding linker script C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/build/esp-idf/esp_system/ld/sections.ld.in
 -- Adding linker script C:/Users/LENOVO/esp/v5.3.1/esp-idf/components/esp_rom/esp32/ld/esp32.rom.ld

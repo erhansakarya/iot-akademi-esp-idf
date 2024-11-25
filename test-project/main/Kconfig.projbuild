@@ -1,0 +1,24 @@
+menu "IoT Akademi Custom Menu"
+
+config SENSOR_TASK_PRIORITY
+    int "Sensor Task Priority"
+    default 5
+    range 1 10
+    help
+        The priority of the sensor task.
+
+config NETWORK_TASK_PRIORITY
+    int "Network Task Priority"
+    default 6
+    range 1 10
+    help
+        The priority of the network task.
+
+config NETWORK_TASK_STACK_SIZE
+    int "Network Task Stack Size"
+    default 2048
+    range 1024 8192
+    help
+        The stack size of the network task.
+
+endmenu

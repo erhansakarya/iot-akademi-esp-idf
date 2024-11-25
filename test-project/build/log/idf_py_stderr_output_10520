@@ -1,4 +1,0 @@
-WARNING: Preprocessor definitions containing '#' may not be passed on the compiler command line because many compilers do not support it.
-CMake is dropping a preprocessor definition: PROJECT_VER="#13-dirty"
-Consider defining the macro in a (configured) header file.
-

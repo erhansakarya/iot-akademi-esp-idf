@@ -4891,6 +4891,53 @@
     {
         "children": [
             {
+                "children": [],
+                "depends_on": null,
+                "help": "The priority of the sensor task.",
+                "id": "SENSOR_TASK_PRIORITY",
+                "name": "SENSOR_TASK_PRIORITY",
+                "range": [
+                    1,
+                    10
+                ],
+                "title": "Sensor Task Priority",
+                "type": "int"
+            },
+            {
+                "children": [],
+                "depends_on": null,
+                "help": "The priority of the network task.",
+                "id": "NETWORK_TASK_PRIORITY",
+                "name": "NETWORK_TASK_PRIORITY",
+                "range": [
+                    1,
+                    10
+                ],
+                "title": "Network Task Priority",
+                "type": "int"
+            },
+            {
+                "children": [],
+                "depends_on": null,
+                "help": "The stack size of the network task.",
+                "id": "NETWORK_TASK_STACK_SIZE",
+                "name": "NETWORK_TASK_STACK_SIZE",
+                "range": [
+                    1024,
+                    8192
+                ],
+                "title": "Network Task Stack Size",
+                "type": "int"
+            }
+        ],
+        "depends_on": null,
+        "id": "iot-akademi-custom-menu",
+        "title": "IoT Akademi Custom Menu",
+        "type": "menu"
+    },
+    {
+        "children": [
+            {
                 "children": [
                     {
                         "children": [],
@@ -22666,7 +22713,7 @@
                         "id": "LWIP_TCPIP_TASK_STACK_SIZE",
                         "name": "LWIP_TCPIP_TASK_STACK_SIZE",
                         "range": [
-                            2560,
+                            2048,
                             65536
                         ],
                         "title": "TCP/IP Task Stack Size",

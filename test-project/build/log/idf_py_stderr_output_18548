@@ -1,0 +1,31 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Espressif\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfgen\__main__.py", line 18, in <module>
+    main()
+  File "C:\Espressif\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfgen\core.py", line 776, in main
+    config = kconfiglib.Kconfig(args.kconfig)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Espressif\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 819, in __init__
+    self._init(filename, warn, warn_to_stderr, encoding)
+  File "C:\Espressif\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 957, in _init
+    self._parse_block(None, self.top_node, self.top_node).next = None
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Espressif\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 2646, in _parse_block
+    self._parse_block(_T_ENDMENU, node, node)
+  File "C:\Espressif\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 2607, in _parse_block
+    prev = self._parse_block(None, parent, prev)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Espressif\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 2590, in _parse_block
+    raise KconfigError(
+kconfiglib.core.KconfigError: C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/build/kconfigs.in:74: 'C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/build/Kconfig.projbuild' not found (in 'source "C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/build/Kconfig.projbuild"'). Check that environment variables are set correctly (e.g. $srctree, which is unset or blank). Also note that unset environment variables expand to the empty string.
+CMake Error at C:/Users/LENOVO/esp/v5.3.1/esp-idf/tools/cmake/kconfig.cmake:209 (message):
+  Failed to run kconfgen
+  (C:/Espressif/python_env/idf5.3_py3.11_env/Scripts/python.exe;-m;kconfgen;--list-separator=semicolon;--kconfig;C:/Users/LENOVO/esp/v5.3.1/esp-idf/Kconfig;--sdkconfig-rename;C:/Users/LENOVO/esp/v5.3.1/esp-idf/sdkconfig.rename;--config;C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/sdkconfig;--env-file;C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/build/config.env).
+  Error 1
+Call Stack (most recent call first):
+  C:/Users/LENOVO/esp/v5.3.1/esp-idf/tools/cmake/build.cmake:623 (__kconfig_generate_config)
+  C:/Users/LENOVO/esp/v5.3.1/esp-idf/tools/cmake/project.cmake:710 (idf_build_process)
+  CMakeLists.txt:9 (project)
+
+
