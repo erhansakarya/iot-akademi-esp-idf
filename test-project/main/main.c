@@ -8,6 +8,7 @@
 #include "esp_spi_flash.h"
 #include "esp_heap_caps.h"
 #include "esp_random.h"
+#include "nvs_flash.h"
 
 #define BUFFER_SIZE 1024
 
@@ -83,6 +84,39 @@ void network_task(void *pvParameters)
 void app_main(void)
 {   
     esp_log_level_set("*", ESP_LOG_INFO);
+
+    // NOTE: Init NVS Flash
+    ESP_ERROR_CHECK(nvs_flash_init());  
+
+    nvs_handle_t storage_handle;
+    int32_t restart_counter = 0;
+
+    ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &storage_handle));
+
+    esp_err_t err = nvs_get_i32(storage_handle, "restart_counter", &restart_counter);
+    if (err == ESP_ERR_NVS_NOT_FOUND)
+    {
+        ESP_LOGI("MAIN", "Restart counter not found, setting to 0");
+        restart_counter = 0;
+    }
+    else if (err != ESP_OK)
+    {
+        ESP_LOGE("MAIN", "Error reading restart counter: %s", esp_err_to_name(err));
+    }
+
+    // NOTE: Increment the restart counter
+    restart_counter++;
+    ESP_LOGI("MAIN", "Restart counter: %ld", restart_counter);
+
+    // NOTE: Write the restart counter to NVS
+    ESP_ERROR_CHECK(nvs_set_i32(storage_handle, "restart_counter", restart_counter));  
+    ESP_ERROR_CHECK(nvs_commit(storage_handle));
+    nvs_close(storage_handle);
+
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+    // NOTE: Execute software reset
+    esp_restart();
 
     uint8_t pin_number_2 = 13;
 
