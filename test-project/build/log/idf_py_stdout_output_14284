@@ -1,5 +1,0 @@
--- ccache will be used for faster recompilation
--- Building ESP-IDF components for target esp32
--- Project sdkconfig file C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/sdkconfig
--- Configuring incomplete, errors occurred!
-See also "C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/build/CMakeFiles/CMakeOutput.log".
