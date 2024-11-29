@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -9,8 +10,16 @@
 #include "esp_heap_caps.h"
 #include "esp_random.h"
 #include "nvs_flash.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_netif.h"
 
 #define BUFFER_SIZE 1024
+
+#define NUM_SSIDs 2
+#define MAX_AP_COUNT 2
+static const char *TAG = "WIFI_SCANNER";
+const char *target_ssids[NUM_SSIDs] = {"AP", "ESP32-AP-2"};
 
 TaskHandle_t sensor_task_handle;
 TaskHandle_t network_task_handle;
@@ -68,16 +77,96 @@ void eeprom_task(void *pvParameters)
     }
 }
 
+static void process_scan_results(uint16_t ap_count, wifi_ap_record_t *ap_records)
+{
+    bool ssid_found = false;
+
+    for (int i = 0; i < ap_count; i++)
+    {
+        ESP_LOGW(TAG, "SSID: %s, RSSI: %d, Channel: %d", ap_records[i].ssid, ap_records[i].rssi, ap_records[i].primary);    
+        for (int j = 0; j < NUM_SSIDs; j++)
+        {
+            if (strcmp((const char *)ap_records[i].ssid, target_ssids[j]) == 0)
+            {
+                ssid_found = true;
+                break;
+            }
+        }
+    }
+
+    uint32_t notification_value = ssid_found ? 1 : 0;
+    if (network_task_handle != NULL)
+    {
+        if (eTaskGetState(network_task_handle) != eDeleted) {
+            xTaskNotify(network_task_handle, notification_value, eSetValueWithOverwrite);
+        } else {
+            ESP_LOGW(TAG, "Network task is deleted");
+        }
+    } else {
+        ESP_LOGW(TAG, "Network task handle is NULL");   
+    }
+}   
+
+static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
+{
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_SCAN_DONE) {
+        uint16_t ap_count = MAX_AP_COUNT;
+        wifi_ap_record_t ap_records[MAX_AP_COUNT];
+        if (esp_wifi_scan_get_ap_records(&ap_count, ap_records) == ESP_OK) {
+            process_scan_results(ap_count, ap_records);
+        } else {
+            ESP_LOGW(TAG, "Failed to get AP records");
+        }
+    }
+}   
+
+void scan_wifi(wifi_scan_config_t *scan_config)
+{
+    ESP_LOGI(TAG, "Starting wifi scan...");
+    if (esp_wifi_scan_start(scan_config, false) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to start wifi scan");
+    } else {
+        ESP_LOGI(TAG, "Wifi scan started");
+    }
+}   
+
 void network_task(void *pvParameters)
 {
-    ESP_LOGI("NETWORK_TASK", "Network task executing");
     // Log the task core id
     ESP_LOGI("NETWORK_TASK", "Network task core id: %d", xPortGetCoreID());
 
+    wifi_scan_config_t scan_config;
+    uint32_t notification_value = 0;
+    static int ssid_index = 0;
+
     while (1)
     {   
-        ESP_LOGI("NETWORK_TASK", "Network task executing");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);  
+        // NOTE: Set scan config
+        scan_config.ssid = (uint8_t *)target_ssids[ssid_index];
+        scan_config.bssid = NULL;
+        scan_config.channel = 0;
+        scan_config.show_hidden = false;
+        scan_config.scan_type = WIFI_SCAN_TYPE_PASSIVE;
+        scan_config.scan_time.passive = 3000;
+
+        // NOTE: Start scan
+        scan_wifi(&scan_config);  
+        
+        // NOTE: Wait for notification
+        if (xTaskNotifyWait(0, 0, &notification_value, portMAX_DELAY) == pdTRUE) {
+            if (notification_value == 1) {
+                ESP_LOGW(TAG, "SSID %s found", target_ssids[ssid_index]);
+            } else {
+                ESP_LOGW(TAG, "SSID %s not found", target_ssids[ssid_index]);
+            }
+        } else {
+            ESP_LOGW(TAG, "Failed to wait for notification");
+        }
+
+        // NOTE: Increment the SSID index
+        ssid_index = (ssid_index + 1) % NUM_SSIDs;
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -86,8 +175,14 @@ void app_main(void)
     esp_log_level_set("*", ESP_LOG_INFO);
 
     // NOTE: Init NVS Flash
-    ESP_ERROR_CHECK(nvs_flash_init());  
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
 
+#if 0
     nvs_handle_t storage_handle;
     int32_t restart_counter = 0;
 
@@ -117,7 +212,7 @@ void app_main(void)
 
     // NOTE: Execute software reset
     esp_restart();
-
+#endif
     uint8_t pin_number_2 = 13;
 
     ESP_LOGI("MAIN", "Sensor task priority: %d", CONFIG_SENSOR_TASK_PRIORITY);
@@ -130,6 +225,18 @@ void app_main(void)
         ESP_LOGE("MAIN", "Failed to create semaphore");
         return;
     }
+
+    // NOTE: Init WiFi Netif
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_sta();
+
+    // NOTE: Init WiFi
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    ESP_ERROR_CHECK(esp_wifi_start()); 
+
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, WIFI_EVENT_SCAN_DONE, wifi_event_handler, NULL, NULL));
 
     xTaskCreatePinnedToCore(&sensor_task, "SENSOR_TASK", 2048, (void *)&pin_number_2, CONFIG_SENSOR_TASK_PRIORITY, NULL, 0);
     xTaskCreatePinnedToCore(&eeprom_task, "EEPROM_TASK", 2048, NULL, 5, NULL, 0);
