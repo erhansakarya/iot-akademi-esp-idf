@@ -3,6 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include "freertos/queue.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_flash.h"
@@ -28,6 +29,7 @@ TaskHandle_t network_task_handle;
 SemaphoreHandle_t sensor_data_semaphore;
 // NOTE: Create a sensor data variable
 int sensor_data = 0;   
+static QueueHandle_t sensor_data_queue;
 
 // NOTE: Dummy read sensor function
 void dummy_read_sensor()
@@ -38,41 +40,61 @@ void dummy_read_sensor()
 }
 
 // NOTE: Dummy EEPROM write function
-void dummy_eeprom_write()
+void dummy_eeprom_write(int received_data)
 {
     ESP_LOGI("DUMMY_EEPROM_WRITE", "Dummy EEPROM write function started");
-    ESP_LOGI("DUMMY_EEPROM_WRITE", "Sensor data: %d", sensor_data);
+    ESP_LOGI("DUMMY_EEPROM_WRITE", "Sensor data from queue: %d", received_data);
     ESP_LOGI("DUMMY_EEPROM_WRITE", "Dummy EEPROM write function finished");
 }
 
 void sensor_task(void *pvParameters)
 {
-    ESP_LOGI("SENSOR_TASK", "Sensor task executing for pin %d", *(uint8_t *)pvParameters);
-    // Log the task core id
-    ESP_LOGI("SENSOR_TASK", "Sensor task core id: %d", xPortGetCoreID());
+    ESP_LOGI("SENSOR_TASK", "Sensor task executing on core %d", xPortGetCoreID());
 
     while (1)
     {
-        // NOTE: Read the sensor data
+        // Read the sensor data
         dummy_read_sensor();
 
-        // NOTE: Give the semaphore to the EEPROM task
+        // Send data to queue
+        if (xQueueSend(sensor_data_queue, &sensor_data, pdMS_TO_TICKS(100)) == pdPASS)
+        {
+            ESP_LOGI("SENSOR_TASK", "Sensor data sent to queue: %d", sensor_data);
+        }
+        else
+        {
+            ESP_LOGE("SENSOR_TASK", "Failed to send sensor data to queue, queue is full!");
+        }
+
+        // Give the semaphore to signal EEPROM task
         xSemaphoreGive(sensor_data_semaphore);
 
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // Wait for 1 second
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
+// EEPROM Task
 void eeprom_task(void *pvParameters)
 {
-    // Log the task core id
-    ESP_LOGI("EEPROM_TASK", "Sensor task core id: %d", xPortGetCoreID());
+    ESP_LOGI("EEPROM_TASK", "EEPROM task executing on core %d", xPortGetCoreID());
+    int received_data = 0;
 
     while (1)
     {
+        // Wait for the semaphore
         if (xSemaphoreTake(sensor_data_semaphore, portMAX_DELAY) == pdTRUE)
         {
-            dummy_eeprom_write();
+            // Receive data from queue
+            if (xQueueReceive(sensor_data_queue, &received_data, pdMS_TO_TICKS(100)) == pdPASS)
+            {
+                // Write data to EEPROM
+                dummy_eeprom_write(received_data);
+            }
+            else
+            {
+                ESP_LOGE("EEPROM_TASK", "Failed to receive data from queue!");
+            }
         }
     }
 }
@@ -223,6 +245,14 @@ void app_main(void)
     if (sensor_data_semaphore == NULL)
     {
         ESP_LOGE("MAIN", "Failed to create semaphore");
+        return;
+    }
+
+    // Create Queue
+    sensor_data_queue = xQueueCreate(5, sizeof(int));
+    if (sensor_data_queue == NULL)
+    {
+        ESP_LOGE(TAG, "Failed to create queue");
         return;
     }
 
