@@ -1,24 +1,196 @@
 menu "IoT Akademi Custom Menu"
 
-config SENSOR_TASK_PRIORITY
-    int "Sensor Task Priority"
-    default 5
-    range 1 10
-    help
-        The priority of the sensor task.
-
-config NETWORK_TASK_PRIORITY
-    int "Network Task Priority"
-    default 6
-    range 1 10
-    help
-        The priority of the network task.
-
-config NETWORK_TASK_STACK_SIZE
-    int "Network Task Stack Size"
-    default 2048
-    range 1024 8192
-    help
-        The stack size of the network task.
-
-endmenu
+    menu "Task Configurations"
+    
+    config SENSOR_TASK_PRIORITY
+        int "Sensor Task Priority"
+        default 5
+        range 1 10
+        help
+            The priority of the sensor task.
+    
+    config NETWORK_TASK_PRIORITY
+        int "Network Task Priority"
+        default 6
+        range 1 10
+        help
+            The priority of the network task.
+    
+    config NETWORK_TASK_STACK_SIZE
+        int "Network Task Stack Size"
+        default 2048
+        range 1024 8192
+        help
+            The stack size of the network task.
+    
+    endmenu
+    
+    menu "Wi-Fi Configurations"
+    
+    config WIFI_AP_SSID
+        string "Wi-Fi AP SSID"
+        default "ESP32_AP"
+        help
+            Specifies the SSID (Service Set Identifier) of the Wi-Fi Access Point (AP).
+    
+            Default: ESP32_AP
+    
+    config WIFI_AP_PASSWORD
+        string "Wi-Fi AP Password"
+        default "password"
+        help
+            Specifies the password for the Wi-Fi Access Point (AP).
+    
+            Default: password
+    
+    config WIFI_AP_CHANNEL
+        int "Wi-Fi AP Channel"
+        default 1
+        range 1 13
+        help
+            Specifies the channel for the Wi-Fi Access Point (AP).
+    
+            Default: 1
+    
+            Explanation:
+            - Channel 1 is preferred for minimal interference in crowded 2.4 GHz networks.
+            - Use a Wi-Fi analyzer to choose the best channel for your environment.
+            - Channels 1, 6, and 11 are non-overlapping and often recommended.
+    
+    config WIFI_AP_SSID_HIDDEN
+        bool "Wi-Fi AP SSID Hidden"
+        default false
+        help
+            Specifies whether the Wi-Fi AP SSID is hidden.
+    
+            Default: false (SSID is visible)
+    
+    config WIFI_AP_MAX_CONNECTIONS
+        int "Wi-Fi AP Maximum Connections"
+        default 1
+        range 1 10
+        help
+            Specifies the maximum number of connections to the Wi-Fi Access Point (AP).
+    
+            Default: 1
+    
+    config WIFI_AP_BEACON_INTERVAL
+        int "Wi-Fi AP Beacon Interval (ms)"
+        default 100
+        range 100 60000
+        help
+            Specifies the time interval in milliseconds between Wi-Fi beacon transmissions.
+    
+            Default: 100 ms
+    
+            Explanation:
+            - A lower beacon interval results in faster device detection but higher power consumption.
+            - 100 ms is a good balance for most ESP32 applications.
+    
+    config WIFI_AP_IP
+        string "Wi-Fi AP IP Address"
+        default "192.168.0.1"
+        help
+            Specifies the IP address of the Wi-Fi Access Point (AP).
+    
+            Default: 192.168.0.1
+    
+    config WIFI_AP_GATEWAY
+        string "Wi-Fi AP Gateway Address"
+        default "192.168.0.1"
+        help
+            Specifies the gateway address for the Wi-Fi Access Point (AP).
+    
+            Default: 192.168.0.1
+    
+    config WIFI_AP_NETMASK
+        string "Wi-Fi AP Netmask"
+        default "255.255.255.0"
+        help
+            Specifies the subnet mask for the Wi-Fi Access Point (AP).
+    
+            Default: 255.255.255.0
+    
+    config WIFI_AP_BANDWIDTH
+        choice "Wi-Fi AP Bandwidth"
+            default WIFI_BW_HT20
+            help
+                Specifies the bandwidth for the Wi-Fi Access Point (AP).
+    
+                Options:
+                - HT20 (20 MHz): Default option. Provides better compatibility with most devices
+                  and minimizes interference with neighboring networks.
+                - HT40 (40 MHz): Provides higher throughput but may increase interference with
+                  other 2.4 GHz devices.
+    
+                Default: HT20
+    
+                Explanation:
+                - 20 MHz (HT20) is recommended for environments with multiple overlapping networks,
+                  as it reduces interference and provides a more stable connection.
+                - 40 MHz (HT40) offers faster speeds but requires cleaner radio conditions to work effectively.
+        config WIFI_BW_HT20
+            bool "HT20 (20 MHz)"
+        config WIFI_BW_HT40
+            bool "HT40 (40 MHz)"
+        endchoice
+    
+    config WIFI_STA_POWER_SAVE
+        choice "Wi-Fi STA Power Save Mode"
+            default WIFI_PS_NONE
+            help
+                Configures the power save mode for the Wi-Fi Station (STA).
+    
+                Options:
+                - NONE (Default): Power saving is disabled. The device stays active to maintain
+                  the best possible connection and performance.
+                - MIN_MODEM: Power saving is enabled with minimal effect on modem activity.
+                  Saves power by reducing the modem's active time while maintaining connectivity.
+                - MAX_MODEM: Aggressive power saving mode. The modem is active only during data
+                  transmission, maximizing power efficiency but potentially increasing latency.
+    
+                Default: NONE
+    
+                Explanation:
+                - Power save mode can extend battery life but may affect network performance.
+                - MIN_MODEM is suitable for devices requiring balanced performance and power efficiency.
+                - MAX_MODEM is ideal for battery-operated devices where power consumption is critical.
+        config WIFI_PS_NONE
+            bool "NONE (Power save disabled)"
+        config WIFI_PS_MIN_MODEM
+            bool "MIN_MODEM (Minimal modem power save)"
+        config WIFI_PS_MAX_MODEM
+            bool "MAX_MODEM (Maximum modem power save)"
+        endchoice
+    
+    config WIFI_MAX_SSID_LENGTH
+        int "Wi-Fi Max SSID Length"
+        default 32
+        range 1 32
+        help
+            Specifies the maximum allowed length for Wi-Fi SSID.
+    
+            Default: 32
+    
+    config WIFI_MAX_PASSWORD_LENGTH
+        int "Wi-Fi Max Password Length"
+        default 64
+        range 8 64
+        help
+            Specifies the maximum allowed length for Wi-Fi password.
+    
+            Default: 64
+    
+    config WIFI_MAX_CONNECTION_RETRIES
+        int "Wi-Fi Max Connection Retries"
+        default 5
+        range 1 10
+        help
+            Specifies the maximum number of retries for Wi-Fi connection attempts.
+    
+            Default: 5
+    
+    endmenu
+    
+    endmenu
+    

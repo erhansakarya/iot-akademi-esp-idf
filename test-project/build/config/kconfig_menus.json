@@ -4891,43 +4891,287 @@
     {
         "children": [
             {
-                "children": [],
-                "depends_on": null,
-                "help": "The priority of the sensor task.",
-                "id": "SENSOR_TASK_PRIORITY",
-                "name": "SENSOR_TASK_PRIORITY",
-                "range": [
-                    1,
-                    10
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "The priority of the sensor task.",
+                        "id": "SENSOR_TASK_PRIORITY",
+                        "name": "SENSOR_TASK_PRIORITY",
+                        "range": [
+                            1,
+                            10
+                        ],
+                        "title": "Sensor Task Priority",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "The priority of the network task.",
+                        "id": "NETWORK_TASK_PRIORITY",
+                        "name": "NETWORK_TASK_PRIORITY",
+                        "range": [
+                            1,
+                            10
+                        ],
+                        "title": "Network Task Priority",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "The stack size of the network task.",
+                        "id": "NETWORK_TASK_STACK_SIZE",
+                        "name": "NETWORK_TASK_STACK_SIZE",
+                        "range": [
+                            1024,
+                            8192
+                        ],
+                        "title": "Network Task Stack Size",
+                        "type": "int"
+                    }
                 ],
-                "title": "Sensor Task Priority",
-                "type": "int"
+                "depends_on": null,
+                "id": "iot-akademi-custom-menu-task-configurations",
+                "title": "Task Configurations",
+                "type": "menu"
             },
             {
-                "children": [],
-                "depends_on": null,
-                "help": "The priority of the network task.",
-                "id": "NETWORK_TASK_PRIORITY",
-                "name": "NETWORK_TASK_PRIORITY",
-                "range": [
-                    1,
-                    10
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the SSID (Service Set Identifier) of the Wi-Fi Access Point (AP).\n\nDefault: ESP32_AP",
+                        "id": "WIFI_AP_SSID",
+                        "name": "WIFI_AP_SSID",
+                        "range": null,
+                        "title": "Wi-Fi AP SSID",
+                        "type": "string"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the password for the Wi-Fi Access Point (AP).\n\nDefault: password",
+                        "id": "WIFI_AP_PASSWORD",
+                        "name": "WIFI_AP_PASSWORD",
+                        "range": null,
+                        "title": "Wi-Fi AP Password",
+                        "type": "string"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the channel for the Wi-Fi Access Point (AP).\n\nDefault: 1\n\nExplanation:\n- Channel 1 is preferred for minimal interference in crowded 2.4 GHz networks.\n- Use a Wi-Fi analyzer to choose the best channel for your environment.\n- Channels 1, 6, and 11 are non-overlapping and often recommended.",
+                        "id": "WIFI_AP_CHANNEL",
+                        "name": "WIFI_AP_CHANNEL",
+                        "range": [
+                            1,
+                            13
+                        ],
+                        "title": "Wi-Fi AP Channel",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies whether the Wi-Fi AP SSID is hidden.\n\nDefault: false (SSID is visible)",
+                        "id": "WIFI_AP_SSID_HIDDEN",
+                        "name": "WIFI_AP_SSID_HIDDEN",
+                        "range": null,
+                        "title": "Wi-Fi AP SSID Hidden",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the maximum number of connections to the Wi-Fi Access Point (AP).\n\nDefault: 1",
+                        "id": "WIFI_AP_MAX_CONNECTIONS",
+                        "name": "WIFI_AP_MAX_CONNECTIONS",
+                        "range": [
+                            1,
+                            10
+                        ],
+                        "title": "Wi-Fi AP Maximum Connections",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the time interval in milliseconds between Wi-Fi beacon transmissions.\n\nDefault: 100 ms\n\nExplanation:\n- A lower beacon interval results in faster device detection but higher power consumption.\n- 100 ms is a good balance for most ESP32 applications.",
+                        "id": "WIFI_AP_BEACON_INTERVAL",
+                        "name": "WIFI_AP_BEACON_INTERVAL",
+                        "range": [
+                            100,
+                            60000
+                        ],
+                        "title": "Wi-Fi AP Beacon Interval (ms)",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the IP address of the Wi-Fi Access Point (AP).\n\nDefault: 192.168.0.1",
+                        "id": "WIFI_AP_IP",
+                        "name": "WIFI_AP_IP",
+                        "range": null,
+                        "title": "Wi-Fi AP IP Address",
+                        "type": "string"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the gateway address for the Wi-Fi Access Point (AP).\n\nDefault: 192.168.0.1",
+                        "id": "WIFI_AP_GATEWAY",
+                        "name": "WIFI_AP_GATEWAY",
+                        "range": null,
+                        "title": "Wi-Fi AP Gateway Address",
+                        "type": "string"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the subnet mask for the Wi-Fi Access Point (AP).\n\nDefault: 255.255.255.0",
+                        "id": "WIFI_AP_NETMASK",
+                        "name": "WIFI_AP_NETMASK",
+                        "range": null,
+                        "title": "Wi-Fi AP Netmask",
+                        "type": "string"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": null,
+                        "id": "WIFI_AP_BANDWIDTH",
+                        "name": "WIFI_AP_BANDWIDTH",
+                        "range": null,
+                        "title": null,
+                        "type": "unknown"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "<choice Wi-Fi AP Bandwidth>",
+                                "help": null,
+                                "id": "WIFI_BW_HT20",
+                                "name": "WIFI_BW_HT20",
+                                "range": null,
+                                "title": "HT20 (20 MHz)",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice Wi-Fi AP Bandwidth>",
+                                "help": null,
+                                "id": "WIFI_BW_HT40",
+                                "name": "WIFI_BW_HT40",
+                                "range": null,
+                                "title": "HT40 (40 MHz)",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": null,
+                        "help": "Specifies the bandwidth for the Wi-Fi Access Point (AP).\n\nOptions:\n- HT20 (20 MHz): Default option. Provides better compatibility with most devices\n  and minimizes interference with neighboring networks.\n- HT40 (40 MHz): Provides higher throughput but may increase interference with\n  other 2.4 GHz devices.\n\nDefault: HT20\n\nExplanation:\n- 20 MHz (HT20) is recommended for environments with multiple overlapping networks,\n  as it reduces interference and provides a more stable connection.\n- 40 MHz (HT40) offers faster speeds but requires cleaner radio conditions to work effectively.",
+                        "id": "",
+                        "name": "Wi-Fi AP Bandwidth",
+                        "title": "",
+                        "type": "choice"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": null,
+                        "id": "WIFI_STA_POWER_SAVE",
+                        "name": "WIFI_STA_POWER_SAVE",
+                        "range": null,
+                        "title": null,
+                        "type": "unknown"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "<choice Wi-Fi STA Power Save Mode>",
+                                "help": null,
+                                "id": "WIFI_PS_NONE",
+                                "name": "WIFI_PS_NONE",
+                                "range": null,
+                                "title": "NONE (Power save disabled)",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice Wi-Fi STA Power Save Mode>",
+                                "help": null,
+                                "id": "WIFI_PS_MIN_MODEM",
+                                "name": "WIFI_PS_MIN_MODEM",
+                                "range": null,
+                                "title": "MIN_MODEM (Minimal modem power save)",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice Wi-Fi STA Power Save Mode>",
+                                "help": null,
+                                "id": "WIFI_PS_MAX_MODEM",
+                                "name": "WIFI_PS_MAX_MODEM",
+                                "range": null,
+                                "title": "MAX_MODEM (Maximum modem power save)",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": null,
+                        "help": "Configures the power save mode for the Wi-Fi Station (STA).\n\nOptions:\n- NONE (Default): Power saving is disabled. The device stays active to maintain\n  the best possible connection and performance.\n- MIN_MODEM: Power saving is enabled with minimal effect on modem activity.\n  Saves power by reducing the modem's active time while maintaining connectivity.\n- MAX_MODEM: Aggressive power saving mode. The modem is active only during data\n  transmission, maximizing power efficiency but potentially increasing latency.\n\nDefault: NONE\n\nExplanation:\n- Power save mode can extend battery life but may affect network performance.\n- MIN_MODEM is suitable for devices requiring balanced performance and power efficiency.\n- MAX_MODEM is ideal for battery-operated devices where power consumption is critical.",
+                        "id": "",
+                        "name": "Wi-Fi STA Power Save Mode",
+                        "title": "",
+                        "type": "choice"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the maximum allowed length for Wi-Fi SSID.\n\nDefault: 32",
+                        "id": "WIFI_MAX_SSID_LENGTH",
+                        "name": "WIFI_MAX_SSID_LENGTH",
+                        "range": [
+                            1,
+                            32
+                        ],
+                        "title": "Wi-Fi Max SSID Length",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the maximum allowed length for Wi-Fi password.\n\nDefault: 64",
+                        "id": "WIFI_MAX_PASSWORD_LENGTH",
+                        "name": "WIFI_MAX_PASSWORD_LENGTH",
+                        "range": [
+                            8,
+                            64
+                        ],
+                        "title": "Wi-Fi Max Password Length",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Specifies the maximum number of retries for Wi-Fi connection attempts.\n\nDefault: 5",
+                        "id": "WIFI_MAX_CONNECTION_RETRIES",
+                        "name": "WIFI_MAX_CONNECTION_RETRIES",
+                        "range": [
+                            1,
+                            10
+                        ],
+                        "title": "Wi-Fi Max Connection Retries",
+                        "type": "int"
+                    }
                 ],
-                "title": "Network Task Priority",
-                "type": "int"
-            },
-            {
-                "children": [],
                 "depends_on": null,
-                "help": "The stack size of the network task.",
-                "id": "NETWORK_TASK_STACK_SIZE",
-                "name": "NETWORK_TASK_STACK_SIZE",
-                "range": [
-                    1024,
-                    8192
-                ],
-                "title": "Network Task Stack Size",
-                "type": "int"
+                "id": "iot-akademi-custom-menu-wi-fi-configurations",
+                "title": "Wi-Fi Configurations",
+                "type": "menu"
             }
         ],
         "depends_on": null,

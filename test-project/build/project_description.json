@@ -6,7 +6,7 @@
     "idf_path":           "C:/Users/LENOVO/esp/v5.3.1/esp-idf",
     "build_dir":          "C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/build",
     "config_file":        "C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/sdkconfig",
-    "config_defaults":    "C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/sdkconfig.defaults",
+    "config_defaults":    "",
     "bootloader_elf":     "C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/build/bootloader/bootloader.elf",
     "app_elf":            "test-project.elf",
     "app_bin":            "test-project.bin",

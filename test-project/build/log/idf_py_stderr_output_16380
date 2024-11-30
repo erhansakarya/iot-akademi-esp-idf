@@ -1,0 +1,6 @@
+warning: WIFI_AP_BANDWIDTH (defined at C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/main/Kconfig.projbuild:114) defined without a type
+warning: WIFI_STA_POWER_SAVE (defined at C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/main/Kconfig.projbuild:138) defined without a type
+warning: <choice Wi-Fi AP Bandwidth> (defined at C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/main/Kconfig.projbuild:115) defined without a prompt
+warning: <choice Wi-Fi STA Power Save Mode> (defined at C:/Users/LENOVO/github/iot-akademi-esp-idf/test-project/main/Kconfig.projbuild:139) defined without a prompt
+Server running, waiting for requests on stdin...
+Loading config from c:\Users\LENOVO\github\iot-akademi-esp-idf\test-project\sdkconfig...
