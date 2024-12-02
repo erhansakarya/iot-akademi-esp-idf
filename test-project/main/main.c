@@ -29,8 +29,15 @@ TaskHandle_t network_task_handle;
 SemaphoreHandle_t sensor_data_semaphore;
 // NOTE: Create a sensor data variable
 int sensor_data = 0;
+int sensor_1_data = 0;
 // NOTE: Create a queue to synchronize access to the sensor data
-QueueHandle_t sensor_data_queue;    
+QueueHandle_t sensor_data_queue; 
+// NOTE: Create an event group to synchronization between two sensor tasks
+EventGroupHandle_t sensor_data_event_group;
+
+// NOTE: Define the event bits
+#define SENSOR_0_DATA_EVENT_BIT (1 << 0) 
+#define SENSOR_1_DATA_EVENT_BIT (1 << 1)   
 
 // NOTE: Dummy read sensor function
 void dummy_read_sensor()
@@ -40,11 +47,17 @@ void dummy_read_sensor()
     ESP_LOGI("DUMMY_READ_SENSOR", "Dummy read sensor function finished");
 }
 
+// NOTE: Dummy read sensor 1 function
+void dummy_read_sensor_1()
+{
+    sensor_1_data += 2;
+}
+
 // NOTE: Dummy EEPROM write function
-void dummy_eeprom_write(int received_data)
+void dummy_eeprom_write(int received_data, int received_data_1)
 {
     ESP_LOGI("DUMMY_EEPROM_WRITE", "Dummy EEPROM write function started");
-    ESP_LOGI("DUMMY_EEPROM_WRITE", "Sensor data from queue: %d", received_data);
+    ESP_LOGI("DUMMY_EEPROM_WRITE", "Sensor datas from event group: %d, %d", received_data, received_data_1);
     ESP_LOGI("DUMMY_EEPROM_WRITE", "Dummy EEPROM write function finished");
 }
 
@@ -56,44 +69,54 @@ void sensor_task(void *pvParameters)
 
     while (1)
     {
-        // NOTE: Read the sensor data
-        dummy_read_sensor();
-
-        // NOTE: Send data to queue
-        if (xQueueSend(sensor_data_queue, &sensor_data, pdMS_TO_TICKS(100)) == pdPASS)
+        while (1)
         {
-            ESP_LOGI("SENSOR_TASK", "Sensor data sent to queue: %d", sensor_data);
-        }
-        else
-        {
-            ESP_LOGE("SENSOR_TASK", "Failed to send sensor data to queue, queue is full!");
-        }
+            // Sensör 0'i oku
+            dummy_read_sensor();
 
-        // NOTE: Give the semaphore to the EEPROM task
-        xSemaphoreGive(sensor_data_semaphore);
+            // SENSOR0_BIT bitini set et
+            ESP_LOGI(TAG, "Setting SENSOR0_BIT.");
+            xEventGroupSetBits(sensor_data_event_group, SENSOR_0_DATA_EVENT_BIT);
 
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+            vTaskDelay(pdMS_TO_TICKS(2000)); // 2 saniye bekle
+        }
+    }
+}
+
+// Sensör 1 Task'ı
+void sensor1_task(void *pvParameters)
+{
+    while (1)
+    {
+        // Sensör 2'yi oku
+        dummy_read_sensor_1();
+
+        // SENSOR1_BIT bitini set et
+        ESP_LOGI(TAG, "Setting SENSOR1_BIT.");
+        xEventGroupSetBits(sensor_data_event_group, SENSOR_1_DATA_EVENT_BIT);
+
+        vTaskDelay(pdMS_TO_TICKS(2000)); // 2 saniye bekle
     }
 }
 
 void eeprom_task(void *pvParameters)
 {
-    // Log the task core id
-    ESP_LOGI("EEPROM_TASK", "EEPROM task core id: %d", xPortGetCoreID());
-    int received_data = 0;
-
     while (1)
     {
-        if (xSemaphoreTake(sensor_data_semaphore, portMAX_DELAY) == pdTRUE)
+        // SENSOR1_BIT ve SENSOR2_BIT bitlerinin set edilmesini bekle
+        ESP_LOGI(TAG, "Waiting for SENSOR1_BIT and SENSOR2_BIT...");
+        EventBits_t bits = xEventGroupWaitBits(
+            sensor_data_event_group,              // Event Group handle
+            SENSOR_0_DATA_EVENT_BIT | SENSOR_1_DATA_EVENT_BIT,       // Beklenen bitler
+            pdTRUE,                          // Bitler temizlensin mi?
+            pdTRUE,                          // Tüm bitler set edilmeli mi?
+            portMAX_DELAY                    // Sonsuza kadar bekle
+        );
+
+        if ((bits & SENSOR_0_DATA_EVENT_BIT) && (bits & SENSOR_1_DATA_EVENT_BIT))
         {
-            if (xQueueReceive(sensor_data_queue, &received_data, pdMS_TO_TICKS(100)) == pdPASS)
-            {
-                dummy_eeprom_write(received_data);
-            }
-            else
-            {
-                ESP_LOGE("EEPROM_TASK", "Failed to receive data from queue!");
-            }   
+            ESP_LOGI(TAG, "Both SENSOR0_BIT and SENSOR1_BIT are set. Writing to EEPROM...");
+            dummy_eeprom_write(sensor_data, sensor_1_data);
         }
     }
 }
@@ -255,6 +278,14 @@ void app_main(void)
         return;
     }
 
+    // Event Group oluştur
+    sensor_data_event_group = xEventGroupCreate();
+    if (sensor_data_event_group == NULL)
+    {
+        ESP_LOGE(TAG, "Failed to create event group!");
+        return;
+    }
+
     // NOTE: Init WiFi Netif
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -268,6 +299,7 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, WIFI_EVENT_SCAN_DONE, wifi_event_handler, NULL, NULL));
 
     xTaskCreatePinnedToCore(&sensor_task, "SENSOR_TASK", 2048, (void *)&pin_number_2, CONFIG_SENSOR_TASK_PRIORITY, NULL, 0);
+    xTaskCreatePinnedToCore(&sensor1_task, "SENSOR1_TASK", 2048, (void *)&pin_number_2, CONFIG_SENSOR_TASK_PRIORITY, NULL, 0);
     xTaskCreatePinnedToCore(&eeprom_task, "EEPROM_TASK", 2048, NULL, 5, NULL, 0);
     xTaskCreatePinnedToCore(&network_task, "NETWORK_TASK", CONFIG_NETWORK_TASK_STACK_SIZE, NULL, CONFIG_NETWORK_TASK_PRIORITY, &network_task_handle, 1);
 
